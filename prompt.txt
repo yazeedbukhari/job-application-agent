@@ -1,15 +1,16 @@
-"""
-    Extract job details from the following HTML.
-    Return only a JSON object with keys exactly:
-    - title
-    - location
-    - company
-    - salary range
-    - hiring manager
-    - department
-    If any of the keys don't have a proper value, set their value to an empty string.
+Extract job details from the provided input.
+Return only a JSON object with keys exactly:
+- title
+- location
+- company
+- salary range
+- hiring manager
+- department
+If any of the keys don't have a proper value, set their value to an empty string.
 
-    for location, I just want the city
-    for the company, remove anything after a standalone dash, and remove anything that has to do with the location
+IMPORTANT OUTPUT RULES:
+- Respond with a single JSON object only.
+- Do not include any prose, explanations, or code fences.
+- Every value must be a string.
 
-"""
+For location, return only the city.
