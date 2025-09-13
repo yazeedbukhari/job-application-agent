@@ -1,25 +1,33 @@
-import os
+import argparse
 import json
-from serpapi import GoogleSearch
-import logging
 
 import utilities.logging_config as logging_config
+from app import create_app
 from app.services.job_parser import parse_job
 from app.services.profile_search import search_profiles
 
-API_KEY = os.getenv("SERPAPI_KEY")
-
-logging_config.configure(level=logging.INFO, log_file="app.log")
 logger = logging_config.get_logger(__name__)
 
-if __name__ == "__main__":
-    job_url = "https://sunlife.wd3.myworkdayjobs.com/en-US/Campus/job/Toronto-Ontario/Student--Junior-Software-Engineer--Winter-2026-_JR00114373?utm_source=Simplify&ref=Simplify"
-    
-    logger.info(f"Starting job parsing: {job_url}")
-    job = parse_job(job_url)
+def main():
+    parser = argparse.ArgumentParser(description="Job Application Agent")
+    parser.add_argument("--mode", choices=["cli", "api"], default="cli")
+    parser.add_argument("--url", help="Job posting URL (for CLI mode)")
+    args = parser.parse_args()
 
-    if job:
-        profiles = search_profiles(job["title"], job["company"], job["location"])
-        logger.info(f"Found {len(profiles)} candidate profiles")
-        with open("profiles.json", "w", encoding="utf-8") as f:
-            json.dump(profiles, f, ensure_ascii=False, indent=2)
+    if args.mode == "cli":
+        if not args.url:
+            logger.error("You must provide --url in CLI mode")
+            return
+        job = parse_job(args.url)
+        if job:
+            profiles = search_profiles(job["title"], job["company"], job["location"])
+            with open("profiles.json", "w", encoding="utf-8") as f:
+                json.dump(profiles, f, ensure_ascii=False, indent=2)
+            logger.info("Profiles saved to profiles.json")
+
+    elif args.mode == "api":
+        app = create_app()
+        app.run(host="0.0.0.0", port=5000, debug=True)
+
+if __name__ == "__main__":
+    main()
