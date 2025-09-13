@@ -7,25 +7,7 @@ from playwright.sync_api import sync_playwright
 import subprocess
 import json
 import re
-
-API_KEY = os.getenv("SERPAPI_KEY")
-
-def fetch_html(url):
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        page.goto(url)
-        html = page.content()
-        browser.close()
-        return html
-    
-def ask_llm(prompt, model="mistral:7b"):
-    result = subprocess.run(
-        ["ollama", "run", model],
-        input=prompt.encode("utf-8"),
-        stdout=subprocess.PIPE
-    )
-    return result.stdout.decode("utf-8")
+import logging
 
 REQUIRED_KEYS = [
     "title",
@@ -35,6 +17,39 @@ REQUIRED_KEYS = [
     "hiring manager",
     "department",
 ]
+
+API_KEY = os.getenv("SERPAPI_KEY")
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,  # default level
+    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
+    handlers=[
+        logging.FileHandler("app.log", encoding="utf-8"),  # logs to file
+        logging.StreamHandler()  # logs to console
+    ]
+)
+
+logger = logging.getLogger(__name__)
+
+def fetch_html(url):
+    logger.info(f"Fetching HTML from {url}")
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.goto(url)
+        html = page.content()
+        browser.close()
+    logger.debug(f"Fetched {len(html)} characters of HTML")
+    return html
+    
+def ask_llm(prompt, model="mistral:7b"):
+    result = subprocess.run(
+        ["ollama", "run", model],
+        input=prompt.encode("utf-8"),
+        stdout=subprocess.PIPE
+    )
+    return result.stdout.decode("utf-8")
 
 def extract_json_object(text):
     try:
@@ -76,9 +91,7 @@ def normalize_job_data(d):
 
 def parse_job(url):
     html = fetch_html(url)
-
-    #with open("html.txt", "w", encoding="utf-8") as f:
-    #    f.write(html)
+    logger.debug(f"Fetched HTML content: {html}")
 
     with open("prompt.txt", "r", encoding="utf-8") as f:
         prompt = f.read()
@@ -86,7 +99,8 @@ def parse_job(url):
             HTML:
             {html[:10000]}
             """
-        
+
+    logger.debug(f"prompt: {prompt}")    
     raw_output = ask_llm(prompt)
 
     data = extract_json_object(raw_output)
@@ -94,9 +108,7 @@ def parse_job(url):
         data = {}
 
     data = normalize_job_data(data)
-
-    #with open("parsed.txt", "w", encoding="utf-8") as f:
-    #    json.dump(data, f, ensure_ascii=False, indent=2)
+    logger.info(f"Extracted job data: {data}")
 
     return data
 
@@ -110,11 +122,13 @@ def search_profiles(job_title, company):
 if __name__ == "__main__":
     # Example: replace with a real job link
     job_url = "https://sunlife.wd3.myworkdayjobs.com/en-US/Campus/job/Toronto-Ontario/Student--Junior-Software-Engineer--Winter-2026-_JR00114373?utm_source=Simplify&ref=Simplify"
+    
+    logger.info(f"Starting job parsing: {job_url}")
     job = parse_job(job_url)
     print("Parsed Job:", job)
+    logger.info(f"Parsed job: {job}")
 
     if job:
         profiles = search_profiles(job["title"], job["company"])
-        print("Candidate Profiles:")
-        for p in profiles:
-            print(p)
+        logger.info(f"Found {len(profiles)} candidate profiles")
+        print("end")
