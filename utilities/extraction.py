@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import json
 import re
 from urllib.parse import urlparse
+from playwright.sync_api import sync_playwright
 
 REQUIRED_KEYS = [
     "title",
@@ -11,6 +12,19 @@ REQUIRED_KEYS = [
     "hiring manager",
     "department",
 ]
+
+def fetch_html(url):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.goto(url, wait_until="domcontentloaded")
+        try:
+            page.wait_for_load_state("networkidle", timeout=10000)
+        except Exception:
+            pass
+        html = page.content()
+        browser.close()
+    return html
 
 def extract_json_object(text):
     try:

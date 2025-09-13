@@ -1,36 +1,20 @@
 import os
 import json
 from serpapi import GoogleSearch
-from playwright.sync_api import sync_playwright
 import logging
 
-import helper.extraction as extraction
-import helper.llm as llm
-import helper.logging_config as logging_config
+import utilities.extraction as extraction
+import utilities.llm as llm
+import utilities.logging_config as logging_config
 
 API_KEY = os.getenv("SERPAPI_KEY")
 
-# Configure logging via helper
 logging_config.configure(level=logging.INFO, log_file="app.log")
 logger = logging_config.get_logger(__name__)
 
-def fetch_html(url):
-    logger.info(f"Fetching HTML from {url}")
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        page.goto(url, wait_until="domcontentloaded")
-        try:
-            page.wait_for_load_state("networkidle", timeout=10000)
-        except Exception:
-            pass
-        html = page.content()
-        browser.close()
-    logger.debug(f"Fetched {len(html)} characters of HTML")
-    return html
-
 def parse_job(url):
-    html = fetch_html(url)
+    logger.info(f"Fetching HTML from {url}")
+    html = extraction.fetch_html(url)
     logger.debug("Fetched HTML content for prompting")
 
     # Load base prompt template
@@ -107,7 +91,7 @@ def search_profiles(job_title, company, location):
     search = GoogleSearch({"q": query_ic, "engine": "google", "api_key": API_KEY})
     results = search.get_dict().get("organic_results", [])
     profiles_ic = [
-        {"title": r.get("title", ""), "url": r.get("link", ""), "queryType": "ic"}
+        {"title": r.get("title", ""), "url": r.get("link", ""), "queryType": "individual_contributor"}
         for r in results
         if r.get("link")
     ]
