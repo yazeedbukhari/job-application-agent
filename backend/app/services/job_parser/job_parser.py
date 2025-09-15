@@ -1,6 +1,7 @@
 import utilities.extraction as extraction
 import utilities.llm as llm
 import utilities.logging_config as logging_config
+from app.services.job_parser.base_prompt import BASE_PROMPT
 
 logger = logging_config.get_logger(__name__)
 
@@ -10,9 +11,8 @@ def parse_job(url):
     html = extraction.fetch_html(url)
     logger.debug("Fetched HTML content for prompting")
 
-    # Load base prompt template
-    with open("prompt.txt", "r", encoding="utf-8") as f:
-        base_prompt = f.read()
+    # Load base prompt template from Python module
+    base_prompt = BASE_PROMPT
 
     # Derive company strictly from URL in code to avoid hallucinations
     derived_company = extraction.derive_company_from_url(url)

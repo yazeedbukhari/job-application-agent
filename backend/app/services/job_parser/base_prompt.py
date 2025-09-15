@@ -1,4 +1,4 @@
-Extract job details from the provided input.
+BASE_PROMPT = """Extract job details from the provided input.
 Return only a JSON object with keys exactly:
 - title
 - location
@@ -14,3 +14,5 @@ IMPORTANT OUTPUT RULES:
 - Every value must be a string.
 
 For location, return only the city.
+"""
+
