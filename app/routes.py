@@ -1,15 +1,20 @@
 from flask import Blueprint, request, jsonify
-from app.services.job_parser import parse_job
-from app.services.profile_search import search_profiles
+from app.services.job_parser.job_parser import parse_job
+from app.services.profile_search.profile_search import search_profiles
 
-bp = Blueprint("api", __name__)
+bp = Blueprint("route", __name__)
 
-@bp.route("/parse-job", methods=["POST"])
+@bp.route("/parse-job", methods=["GET", "POST"])
 def parse_job_endpoint():
-    data = request.get_json()
-    url = data.get("url")
+    if request.method == "GET":
+        url = request.args.get("url")
+    else:  # POST
+        data = request.get_json()
+        url = data.get("url") if data else None
+
     if not url:
         return jsonify({"error": "Missing job URL"}), 400
+
     job = parse_job(url)
     return jsonify(job)
 

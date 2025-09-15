@@ -3,8 +3,8 @@ import json
 
 import utilities.logging_config as logging_config
 from app import create_app
-from app.services.job_parser import parse_job
-from app.services.profile_search import search_profiles
+from app.services.job_parser.job_parser import parse_job
+from app.services.profile_search.profile_search import search_profiles
 
 logger = logging_config.get_logger(__name__)
 
@@ -27,7 +27,7 @@ def main():
 
     elif args.mode == "api":
         app = create_app()
-        app.run(host="0.0.0.0", port=5000, debug=True)
+        app.run(host="0.0.0.0", port=8080, debug=True)
 
 if __name__ == "__main__":
     main()
