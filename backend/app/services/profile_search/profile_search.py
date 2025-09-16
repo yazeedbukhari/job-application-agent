@@ -26,19 +26,19 @@ def search_profiles(job_title, company, location):
     search = GoogleSearch({"q": query_ic, "engine": "google", "api_key": API_KEY})
     results = search.get_dict().get("organic_results", [])
     profiles_ic = [
-        {"title": r.get("title", ""), "url": r.get("link", ""), "queryType": "individual_contributor"}
+        {"title": r.get("title", ""), "url": r.get("link", ""), "queryType": "individual_contributor", "company": company_q}
         for r in results
         if r.get("link")
     ]
 
     # Query 2: lead/manager
     managers_term = '("lead" OR "manager")'
-    query_mgr = f"{site_q} ({base_job_query}) {managers_term} {company_q} {location_q} {filters_q}".strip()
+    query_mgr = f"{site_q} software {managers_term} {company_q} {location_q} {filters_q}".strip()
     logger.info(f"Searching profiles (lead/manager) with query: {query_mgr}")
     search = GoogleSearch({"q": query_mgr, "engine": "google", "api_key": API_KEY})
     results = search.get_dict().get("organic_results", [])
     profiles_mgr = [
-        {"title": r.get("title", ""), "url": r.get("link", ""), "queryType": "lead_manager"}
+        {"title": r.get("title", ""), "url": r.get("link", ""), "queryType": "lead_manager", "company": company_q}
         for r in results
         if r.get("link")
     ]
